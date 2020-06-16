@@ -38,4 +38,26 @@ describe('auth routes', () => {
         });
       });
   });
+
+  it('can create a new user', async() => {
+    User.create({
+      email: 'jjjj@jj.com',
+      password: 'password1234',
+      profileImage: 'https://usercontent2.hubstatic.com/13388733.jpg'
+    });
+
+    return request(app)
+      .post('/api/v1/auth/signin')
+      .send({
+        email: 'jjjj@jj.com',
+        password: 'password1234',
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          email: 'jjjj@jj.com',
+          profileImage: 'https://usercontent2.hubstatic.com/13388733.jpg'
+        });
+      });
+  });
 });
