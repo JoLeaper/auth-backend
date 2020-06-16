@@ -1,48 +1,61 @@
-// const { MongoMemoryServer } = require('mongodb-memory-server');
-// const mongod = new MongoMemoryServer();
-// const mongoose = require('mongoose');
-// const connect = require('../lib/utils/connect');
+require('dotenv').config();
 
-// const request = require('supertest');
-// const app = require('../lib/app');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongod = new MongoMemoryServer();
+const mongoose = require('mongoose');
+const connect = require('../lib/utils/connect');
 
-// describe('card-listing routes', () => {
-//   beforeAll(async() => {
-//     const uri = await mongod.getUri();
-//     return connect(uri);
-//   });
+const request = require('supertest');
+const app = require('../lib/app');
+const User = require('../lib/models/User');
 
-//   beforeEach(() => {
-//     return mongoose.connection.dropDatabase();
-//   });
+describe('auth routes', () => {
+  beforeAll(async() => {
+    const uri = await mongod.getUri();
+    return connect(uri);
+  });
 
-//   afterAll(async() => {
-//     await mongoose.connection.close();
-//     return mongod.stop();
-//   });
+  beforeEach(() => {
+    return mongoose.connection.dropDatabase();
+  });
 
-//   // it('creates a new card listing with post', async() => {
-//   //   const captainMorgan = await Product.create({
-//   //     name: 'Captain Morgan Spiced Rum',
-//   //     description: 'US Virgin Islands- Mixes aromas of marshmallow, light toffee and light spiced honey, leading into a molasses-centric flavor. Ideal for spicing up tropical cocktails or mixed with cola.',
-//   //     salePricePerMl: 0.02,
-//   //     purchasePricePerBottle: 14.99,
-//   //     size: 750
-//   //   });
-//   //   return request(app)
-//   //     .post('/api/v1/bottles')
-//   //     .send({
-//   //       product: captainMorgan._id
-//   //     })
-//   //     .then(res => {
-//   //       expect(res.body).toEqual({
-//   //         _id: expect.anything(),
-//   //         product: captainMorgan._id.toString(),
-//   //         remainingLiquid: captainMorgan.size,
-//   //         purchaseDate: expect.any(String),
-//   //         lastPourDate: expect.any(String),
-//   //         __v: 0
-//   //       });
-//   //     });
-//   // });
-// });
+  afterAll(async() => {
+    await mongoose.connection.close();
+    return mongod.stop();
+  });
+
+  it('can create a new card listing', async() => {
+    const user = await User.create({
+      email: 'jjjj@jj.com',
+      password: 'password1234',
+      profileImage: 'https://usercontent2.hubstatic.com/13388733.jpg'
+    });
+
+    const agent = request.agent(app);
+
+    return agent
+      .post('/api/v1/auth/login')
+      .send({
+        email: 'yugi@pharaoh.com',
+        password: 'millennium'
+      })
+      .then(() => agent)
+      .post('/api/v1/newCard')
+      .send({
+        seller: user._id,
+        cardName: 'Dark Magician',
+        cardRarity: 'Ultimate Rare',
+        cardCost: 50,
+        cardQuantity: 2,
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          seller: user._id,
+          cardName: expect.any(String),
+          cardRarity: expect.any(String),
+          cardCost: expect.any(Number),
+          cardQuantity: expect.any(Number),
+        });
+      });
+  });
+});
