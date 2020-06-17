@@ -60,7 +60,7 @@ describe('auth routes', () => {
       });
   });
 
-  it('can create a new card listing', async() => {
+  it('can get all the cards listed', async() => {
     const user = await User.create({
       email: 'yugi@pharaoh.com',
       password: 'millennium',
@@ -83,17 +83,22 @@ describe('auth routes', () => {
           cardCost: 50,
           cardQuantity: 2,
         }))
-      .get('api/v1/cardlistings')
-      .then(res => {
-        expect(res.body).toEqual([{
-          _id: expect.anything(),
-          seller: user.id,
-          cardName: expect.any(String),
-          cardRarity: expect.any(String),
-          cardCost: expect.any(Number),
-          cardQuantity: expect.any(Number),
-          __v: 0
-        }]);
+      .then(() => {
+        return agent.get('/api/v1/cardlistings')
+     
+          .then(res => {
+            expect(res.body).toEqual(
+              [{
+                _id: expect.anything(),
+                seller: user.id,
+                cardName: expect.any(String),
+                cardRarity: expect.any(String),
+                cardCost: expect.any(Number),
+                cardQuantity: expect.any(Number),
+                __v: 0
+              }]
+            );
+          });
       });
-  });
+  }); 
 });
