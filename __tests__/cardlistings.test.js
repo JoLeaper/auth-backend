@@ -26,8 +26,8 @@ describe('auth routes', () => {
 
   it('can create a new card listing', async() => {
     const user = await User.create({
-      email: 'jjjj@jj.com',
-      password: 'password1234',
+      email: 'yugi@pharaoh.com',
+      password: 'millennium',
       profileImage: 'https://usercontent2.hubstatic.com/13388733.jpg'
     });
 
@@ -39,23 +39,61 @@ describe('auth routes', () => {
         email: 'yugi@pharaoh.com',
         password: 'millennium'
       })
-      .then(() => agent)
-      .post('/api/v1/newCard')
-      .send({
-        seller: user._id,
-        cardName: 'Dark Magician',
-        cardRarity: 'Ultimate Rare',
-        cardCost: 50,
-        cardQuantity: 2,
-      })
+      .then(() => agent
+        .post('/api/v1/cardlistings')
+        .send({
+          cardName: 'Dark Magician',
+          cardRarity: 'Ultimate Rare',
+          cardCost: 50,
+          cardQuantity: 2,
+        }))
       .then(res => {
         expect(res.body).toEqual({
-          seller: user._id,
+          _id: expect.anything(),
+          seller: user.id,
           cardName: expect.any(String),
           cardRarity: expect.any(String),
           cardCost: expect.any(Number),
           cardQuantity: expect.any(Number),
+          __v: 0
         });
+      });
+  });
+
+  it('can create a new card listing', async() => {
+    const user = await User.create({
+      email: 'yugi@pharaoh.com',
+      password: 'millennium',
+      profileImage: 'https://usercontent2.hubstatic.com/13388733.jpg'
+    });
+
+    const agent = request.agent(app);
+
+    return agent
+      .post('/api/v1/auth/login')
+      .send({
+        email: 'yugi@pharaoh.com',
+        password: 'millennium'
+      })
+      .then(() => agent
+        .post('/api/v1/cardlistings')
+        .send({
+          cardName: 'Dark Magician',
+          cardRarity: 'Ultimate Rare',
+          cardCost: 50,
+          cardQuantity: 2,
+        }))
+      .get('api/v1/cardlistings')
+      .then(res => {
+        expect(res.body).toEqual([{
+          _id: expect.anything(),
+          seller: user.id,
+          cardName: expect.any(String),
+          cardRarity: expect.any(String),
+          cardCost: expect.any(Number),
+          cardQuantity: expect.any(Number),
+          __v: 0
+        }]);
       });
   });
 });
